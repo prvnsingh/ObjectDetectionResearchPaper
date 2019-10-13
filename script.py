@@ -128,16 +128,21 @@ def process_imgdir(imgdir):
         if os.path.isfile(filepath1 and filepath2 and filepath3):
             basename = os.path.basename(filepath1)
             image1 = cv.imread(filepath1, cv.IMREAD_COLOR)
-            image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
+            # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
             image3 = cv.imread(filepath3, cv.IMREAD_COLOR)
-            image_1 = image2 - image1
-            image_2 = image3 - image2
-            image = image_2 - image_1
-            print(image1)
-            print("image 1")
-            print(image_1)
-            print("image_1")
-            ret, image = cv.threshold(image, 0, 0, cv.THRESH_BINARY)
+            image = cv.subtract(image3, image1)
+            # image_2 = cv.subtract(image3, image2)
+            # image = cv.subtract(image_2, image_1)
+            # print(image1, image2)
+            # print("Image 3")
+            # print(image3)
+
+            # print("Image 2 - Image 1", image_1)
+            # print(image_1)
+
+            # print("Image 3 - Image 2")
+            print(image)
+            # ret, image = cv.threshold(image, 0, 0, cv.THRESH_BINARY)
             ret, image = cv.threshold(image, 150, 1, cv.THRESH_BINARY)
             print(image)
             if len(image.shape) == 3 and image.shape[2] == 3:
