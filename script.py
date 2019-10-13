@@ -21,7 +21,7 @@
 
 #     if ret:
 #         # if video is still left continue creating images
-#         name = './data/frame' + str(currentframe) + '.jpg'
+#         name = str(currentframe) + '.jpg'
 #         print('Creating...' + name)
 
 #         # writing the extracted images
@@ -114,6 +114,31 @@ def get_scene_radiance(img,
     img = np.float64(img)
     return np.uint8(((img - atmosphere) / clamped + atmosphere).clip(0, L - 1))
 
+# Video Generating function
+
+
+def generate_video(imgdir):
+    image_folder = imgdir
+    video_name = '20frameswiththreshold.avi'
+    os.chdir("C:\\Users\\prvns\\Downloads\\research paper\\video\\")
+
+    images = [img for img in os.listdir(image_folder)
+              if img.endswith(".jpg") or
+              img.endswith(".jpeg") or
+              img.endswith("png")]
+    frame = cv.imread(os.path.join(image_folder, images[0]))
+    height, width, layers = frame.shape
+    video = cv.VideoWriter(video_name, 0, 1, (width, height))
+
+    # Appending the images to the video one by one
+    for image in images:
+        video.write(cv.imread(os.path.join(image_folder, image)))
+
+    # Deallocating memories taken for window creation
+    cv.destroyAllWindows()
+    video.release()
+    print("done scene")
+
 
 def process_imgdir(imgdir):
     resultdir = os.path.join(imgdir, 'results')
@@ -121,38 +146,46 @@ def process_imgdir(imgdir):
     shutil.rmtree(resultdir)
     os.mkdir(resultdir)
     directory = list(os.listdir(inputdir))
-    for index, fullname in enumerate(directory):
-        filepath1 = os.path.join(inputdir, fullname)
-        filepath2 = os.path.join(inputdir, directory[index + 1])
-        filepath3 = os.path.join(inputdir, directory[index + 2])
-        if os.path.isfile(filepath1 and filepath2 and filepath3):
+
+    for fullname in range(0, len(directory)):
+        fullname1 = str(fullname) + '.jpg'
+        # fullname2 = str(fullname + 20) + '.jpg'
+        filepath1 = os.path.join(inputdir, fullname1)
+        # filepath2 = os.path.join(inputdir, fullname2)
+        if os.path.isfile(filepath1):
             basename = os.path.basename(filepath1)
             image1 = cv.imread(filepath1, cv.IMREAD_COLOR)
             # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
-            image3 = cv.imread(filepath3, cv.IMREAD_COLOR)
-            image = cv.subtract(image3, image1)
-            # image_2 = cv.subtract(image3, image2)
-            # image = cv.subtract(image_2, image_1)
-            # print(image1, image2)
-            # print("Image 3")
-            # print(image3)
+            # image = cv.subtract(image2, image1)
+            image = image1
+            imgheight = image.shape[0]
+            imgwidth = image.shape[1]
 
-            # print("Image 2 - Image 1", image_1)
-            # print(image_1)
+            y1 = 0
+            M = imgheight // 2
+            N = imgwidth // 2
 
-            # print("Image 3 - Image 2")
-            print(image)
-            # ret, image = cv.threshold(image, 0, 0, cv.THRESH_BINARY)
-            ret, image = cv.threshold(image, 150, 1, cv.THRESH_BINARY)
-            print(image)
+            for y in range(0, imgheight, M):
+                for x in range(0, imgwidth, N):
+                    y1 = y + M
+                    x1 = x + N
+                    tiles = image[y:y + M, x:x + N]
+
+                    cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
+                    cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", tiles)
+
+            cv.imwrite("asas.png", image)
+
+            # ret, image = cv.threshold(image, 75, 255, cv.THRESH_BINARY)
             if len(image.shape) == 3 and image.shape[2] == 3:
                 print('Processing %s ...' % basename)
             else:
                 sys.stderr.write('Skipping %s, not RGB' % basename)
                 continue
-            dehazed = get_scene_radiance(image)
-            side_by_side = np.concatenate((image1, dehazed), axis=1)
-            cv.imwrite(os.path.join(resultdir, basename), side_by_side)
+            # dehazed = get_scene_radiance(image)
+            # side_by_side = np.concatenate((image1, dehazed), axis=1)
+            # cv.imwrite(os.path.join(resultdir, basename), image)
+    # generate_video(resultdir)
 
 
 def main():
