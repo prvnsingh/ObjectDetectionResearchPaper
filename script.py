@@ -43,6 +43,9 @@ import cv2 as cv
 import os
 import shutil
 import sys
+from scipy import misc
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import imread
 
 L = 256
 
@@ -139,6 +142,12 @@ def generate_video(imgdir):
     video.release()
     print("done scene")
 
+def discrete_radon_transform(image, steps):
+    R = np.zeros((steps, len(image)), dtype='float64')
+    for s in range(steps):
+        rotation = misc.imrotate(image, -s*180/steps).astype('float64')
+        R[:,s] = sum(rotation)
+    return R
 
 def process_imgdir(imgdir):
     resultdir = os.path.join(imgdir, 'results')
@@ -149,6 +158,7 @@ def process_imgdir(imgdir):
 
     for fullname in range(0, len(directory)):
         fullname1 = str(fullname) + '.jpg'
+        print(fullname1)
         # fullname2 = str(fullname + 20) + '.jpg'
         filepath1 = os.path.join(inputdir, fullname1)
         # filepath2 = os.path.join(inputdir, fullname2)
@@ -157,24 +167,41 @@ def process_imgdir(imgdir):
             image1 = cv.imread(filepath1, cv.IMREAD_COLOR)
             # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
             # image = cv.subtract(image2, image1)
-            image = image1
-            imgheight = image.shape[0]
-            imgwidth = image.shape[1]
+            # image = image1
 
-            y1 = 0
-            M = imgheight // 2
-            N = imgwidth // 2
+            # Radon Transform: https://gist.github.com/fubel/ad01878c5a08a57be9b8b80605ad1247
+            # Read image as 64bit float gray scale
+            image = misc.imread(image1, flatten=True).astype('float64')
+            radon = discrete_radon_transform(image, 220)
 
-            for y in range(0, imgheight, M):
-                for x in range(0, imgwidth, N):
-                    y1 = y + M
-                    x1 = x + N
-                    tiles = image[y:y + M, x:x + N]
+            # Plot the original and the radon transformed image
+            plt.subplot(1, 2, 1), plt.imshow(image, cmap='gray')
+            plt.xticks([]), plt.yticks([])
+            # plt.subplot(1, 2, 2), plt.imshow(radon, cmap='gray')
+            # plt.xticks([]), plt.yticks([])
+            print("Plot Graph")
+            plt.show()
 
-                    cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
-                    cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", tiles)
+            # To Divide the Image in 4 Equal Parts
+            # imgheight = image.shape[0]
+            # imgwidth = image.shape[1]
+            #
+            # y1 = 0
+            # M = imgheight // 2
+            # N = imgwidth // 2
+            #
+            # for y in range(0, imgheight, M):
+            #     for x in range(0, imgwidth, N):
+            #         y1 = y + M
+            #         x1 = x + N
+            #         tiles = image[y:y + M, x:x + N]
+            #
+            #         cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
+            #         cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", tiles)
+            #
+            # cv.imwrite("asas.png", image)
 
-            cv.imwrite("asas.png", image)
+
 
             # ret, image = cv.threshold(image, 75, 255, cv.THRESH_BINARY)
             if len(image.shape) == 3 and image.shape[2] == 3:
@@ -191,7 +218,6 @@ def process_imgdir(imgdir):
 def main():
     scriptdir = os.path.dirname(os.path.realpath(__file__))
     imgdir = os.path.join(scriptdir, 'data')
-    print(imgdir)
     process_imgdir(imgdir)
 
 
