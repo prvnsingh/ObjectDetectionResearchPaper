@@ -46,6 +46,9 @@ import sys
 from scipy import misc
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imread
+from skimage.io import imread
+from skimage.data import shepp_logan_phantom
+from skimage.transform import radon, rescale
 
 L = 256
 
@@ -142,12 +145,21 @@ def generate_video(imgdir):
     video.release()
     print("done scene")
 
-def discrete_radon_transform(image, steps):
-    R = np.zeros((steps, len(image)), dtype='float64')
-    for s in range(steps):
-        rotation = misc.imrotate(image, -s*180/steps).astype('float64')
-        R[:,s] = sum(rotation)
-    return R
+def radon_transform(image):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4.5))
+    ax1.imshow(image, cmap=plt.cm.Greys_r)
+    ax1.set_title("Original")
+
+    theta = np.linspace(0., 180., max(image.shape), endpoint=False)
+    sinogram = radon(image, theta=theta, circle=True)
+    ax2.set_title("Radon transform\n(Sinogram)")
+    ax2.set_xlabel("Projection angle (deg)")
+    ax2.set_ylabel("Projection position (pixels)")
+    ax2.imshow(sinogram, cmap=plt.cm.Greys_r,
+            extent=(0, 180, 0, sinogram.shape[0]), aspect='auto')
+
+    fig.tight_layout()
+    plt.show()
 
 def process_imgdir(imgdir):
     resultdir = os.path.join(imgdir, 'results')
@@ -167,39 +179,29 @@ def process_imgdir(imgdir):
             image1 = cv.imread(filepath1, cv.IMREAD_COLOR)
             # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
             # image = cv.subtract(image2, image1)
-            # image = image1
-
-            # Radon Transform: https://gist.github.com/fubel/ad01878c5a08a57be9b8b80605ad1247
-            # Read image as 64bit float gray scale
-            image = misc.imread(image1, flatten=True).astype('float64')
-            radon = discrete_radon_transform(image, 220)
-
-            # Plot the original and the radon transformed image
-            plt.subplot(1, 2, 1), plt.imshow(image, cmap='gray')
-            plt.xticks([]), plt.yticks([])
-            # plt.subplot(1, 2, 2), plt.imshow(radon, cmap='gray')
-            # plt.xticks([]), plt.yticks([])
-            print("Plot Graph")
-            plt.show()
+            image = image1
 
             # To Divide the Image in 4 Equal Parts
-            # imgheight = image.shape[0]
-            # imgwidth = image.shape[1]
-            #
-            # y1 = 0
-            # M = imgheight // 2
-            # N = imgwidth // 2
-            #
-            # for y in range(0, imgheight, M):
-            #     for x in range(0, imgwidth, N):
-            #         y1 = y + M
-            #         x1 = x + N
-            #         tiles = image[y:y + M, x:x + N]
-            #
-            #         cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
-            #         cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", tiles)
-            #
-            # cv.imwrite("asas.png", image)
+            imgheight = image.shape[0]
+            imgwidth = image.shape[1]
+
+            y1 = 0
+            M = imgheight // 2
+            N = imgwidth // 2
+
+            for y in range(0, imgheight, M):
+                for x in range(0, imgwidth, N):
+                    y1 = y + M
+                    x1 = x + N
+                    tiles = image[y:y + M, x:x + N]
+
+                    cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
+                    cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", tiles)
+
+                    testImg = cv.imread("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", 0);
+                    radon_transform(testImg)
+
+            cv.imwrite("asas.png", image)
 
 
 
