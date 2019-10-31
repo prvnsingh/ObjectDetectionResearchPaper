@@ -1,22 +1,35 @@
+
 # import cv2
-# image1 = cv2.imread("frame912.jpg", cv2.IMREAD_COLOR)
-# image2 = cv2.imread("frame972.jpg", cv2.IMREAD_COLOR)
-# image = cv2.subtract(image2, image1)
-# print(image.shape)
-# # cv2.imwrite("result.jpg", image)
-# # result = cv2.imread("result.jpg", cv2.IMREAD_COLOR)
-# # ret, image = cv2.threshold(result, 150, 255, cv2.THRESH_BINARY)
-# # print(image.shape)
-# # cv2.imwrite("threshold.jpg", image)
-
-# dirs = list(range(10))
-# print(dirs)
-# for index, i in enumerate(dirs[0:len(dirs):2]):
-#     print("i", i)
-#     print("i+index", i + index)
-#     print("index", index)
+# import matplotlib.pyplot as plt
+# image = cv2.imread('frame912.jpg', 0)
+# hist = cv2.calcHist([image], [0], None, [256], [0, 256])
+# plt.plot(hist)
+# plt.hist(image.flatten(), 256, [0, 256])
+# plt.show()
 
 
-l = ['frame0.jpg', 'frame2.jpg', 'frame10.jpg', 'frame100.jpg', 'frame1000.jpg', 'frame1001.jpg', 'frame1002.jpg', 'frame1003.jpg', 'frame1004.jpg', 'frame1005.jpg', 'frame1006.jpg', 'frame1007.jpg', 'frame1008.jpg', 'frame1009.jpg', 'frame101.jpg', 'frame1010.jpg', 'frame1011.jpg', 'frame1012.jpg', 'frame1013.jpg']
-l.sort()
-print(l)
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+from skimage.io import imread
+from skimage.data import shepp_logan_phantom
+from skimage.transform import radon, rescale
+
+image = cv2.imread('frame912.jpg', 0)
+# image = rescale(image, scale=0.4, mode='reflect', multichannel=False)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4.5))
+
+ax1.set_title("Original")
+ax1.imshow(image, cmap=plt.cm.Greys_r)
+
+theta = np.linspace(0., 180., max(image.shape), endpoint=False)
+sinogram = radon(image, theta=theta, circle=True)
+ax2.set_title("Radon transform\n(Sinogram)")
+ax2.set_xlabel("Projection angle (deg)")
+ax2.set_ylabel("Projection position (pixels)")
+ax2.imshow(sinogram, cmap=plt.cm.Greys_r,
+           extent=(0, 180, 0, sinogram.shape[0]), aspect='auto')
+
+fig.tight_layout()
+plt.show()

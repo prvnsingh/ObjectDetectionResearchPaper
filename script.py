@@ -43,6 +43,12 @@ import cv2 as cv
 import os
 import shutil
 import sys
+from scipy import misc
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import imread
+from skimage.io import imread
+from skimage.data import shepp_logan_phantom
+from skimage.transform import radon, rescale
 
 L = 256
 
@@ -139,6 +145,21 @@ def generate_video(imgdir):
     video.release()
     print("done scene")
 
+def radon_transform(image):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4.5))
+    ax1.imshow(image, cmap=plt.cm.Greys_r)
+    ax1.set_title("Original")
+
+    theta = np.linspace(0., 180., max(image.shape), endpoint=False)
+    sinogram = radon(image, theta=theta, circle=True)
+    ax2.set_title("Radon transform\n(Sinogram)")
+    ax2.set_xlabel("Projection angle (deg)")
+    ax2.set_ylabel("Projection position (pixels)")
+    ax2.imshow(sinogram, cmap=plt.cm.Greys_r,
+            extent=(0, 180, 0, sinogram.shape[0]), aspect='auto')
+
+    fig.tight_layout()
+    plt.show()
 
 def process_imgdir(imgdir):
     resultdir = os.path.join(imgdir, 'results')
@@ -149,6 +170,7 @@ def process_imgdir(imgdir):
 
     for fullname in range(0, len(directory)):
         fullname1 = str(fullname) + '.jpg'
+        print(fullname1)
         # fullname2 = str(fullname + 20) + '.jpg'
         filepath1 = os.path.join(inputdir, fullname1)
         # filepath2 = os.path.join(inputdir, fullname2)
@@ -158,6 +180,8 @@ def process_imgdir(imgdir):
             # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
             # image = cv.subtract(image2, image1)
             image = image1
+
+            # To Divide the Image in 4 Equal Parts
             imgheight = image.shape[0]
             imgwidth = image.shape[1]
 
@@ -174,7 +198,12 @@ def process_imgdir(imgdir):
                     cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
                     cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", tiles)
 
+                    testImg = cv.imread("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", 0);
+                    radon_transform(testImg)
+
             cv.imwrite("asas.png", image)
+
+
 
             # ret, image = cv.threshold(image, 75, 255, cv.THRESH_BINARY)
             if len(image.shape) == 3 and image.shape[2] == 3:
@@ -191,7 +220,6 @@ def process_imgdir(imgdir):
 def main():
     scriptdir = os.path.dirname(os.path.realpath(__file__))
     imgdir = os.path.join(scriptdir, 'data')
-    print(imgdir)
     process_imgdir(imgdir)
 
 
