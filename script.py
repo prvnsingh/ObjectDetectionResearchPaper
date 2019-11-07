@@ -125,9 +125,10 @@ def get_scene_radiance(img,
 
 def generate_video(imgdir):
     image_folder = imgdir
-    video_name = '20frameswiththreshold.avi'
-    os.chdir("C:\\Users\\prvns\\Downloads\\research paper\\video\\")
+    video_name = 'Radon1.avi'
+    # os.chdir("C:\\Users\\prvns\\Downloads\\research paper\\video\\")
 
+    directory = list(os.listdir(image_folder))
     images = [img for img in os.listdir(image_folder)
               if img.endswith(".jpg") or
               img.endswith(".jpeg") or
@@ -137,84 +138,94 @@ def generate_video(imgdir):
     video = cv.VideoWriter(video_name, 0, 1, (width, height))
 
     # Appending the images to the video one by one
-    for image in images:
-        video.write(cv.imread(os.path.join(image_folder, image)))
+    for image in range(0, len(directory), 4):
+        print (image)
+        imageName = str(image) + '.jpg'
+        print(imageName)
+        video.write(cv.imread(os.path.join(image_folder, imageName)))
 
     # Deallocating memories taken for window creation
     cv.destroyAllWindows()
     video.release()
     print("done scene")
 
-def radon_transform(image):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4.5))
-    ax1.imshow(image, cmap=plt.cm.Greys_r)
-    ax1.set_title("Original")
+def radon_transform(image, fullname, x, y):
+    fig, (ax2) = plt.subplots(1, 1, figsize=(8, 4.5))
+    # ax1.imshow(image, cmap=plt.cm.Greys_r)
+    # ax1.set_title("Original")
 
     theta = np.linspace(0., 180., max(image.shape), endpoint=False)
     sinogram = radon(image, theta=theta, circle=True)
-    ax2.set_title("Radon transform\n(Sinogram)")
-    ax2.set_xlabel("Projection angle (deg)")
-    ax2.set_ylabel("Projection position (pixels)")
+    # ax2.set_title("Radon transform\n(Sinogram)")
+    # ax2.set_xlabel("Projection angle (deg)")
+    # ax2.set_ylabel("Projection position (pixels)")
     ax2.imshow(sinogram, cmap=plt.cm.Greys_r,
             extent=(0, 180, 0, sinogram.shape[0]), aspect='auto')
 
-    fig.tight_layout()
-    plt.show()
+    plt.xticks([])
+    plt.yticks([])
+    # fig.tight_layout()
+    # plt.show()
+    plt.savefig("radon_transform_video/" + str(fullname) + '-' + str(x) + '_' + str(y) + "RD.png")
+    plt.close(fig)
 
 def process_imgdir(imgdir):
     resultdir = os.path.join(imgdir, 'results')
     inputdir = os.path.join(imgdir, 'inputs')
+    goBackOneDir = os.path.abspath(os.path.join(__file__ ,".."))
+    radonResult = os.path.join(goBackOneDir, 'radon_transform_video')
+    print(radonResult)
     shutil.rmtree(resultdir)
     os.mkdir(resultdir)
     directory = list(os.listdir(inputdir))
 
-    for fullname in range(0, len(directory)):
-        fullname1 = str(fullname) + '.jpg'
-        print(fullname1)
-        # fullname2 = str(fullname + 20) + '.jpg'
-        filepath1 = os.path.join(inputdir, fullname1)
-        # filepath2 = os.path.join(inputdir, fullname2)
-        if os.path.isfile(filepath1):
-            basename = os.path.basename(filepath1)
-            image1 = cv.imread(filepath1, cv.IMREAD_COLOR)
-            # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
-            # image = cv.subtract(image2, image1)
-            image = image1
-
-            # To Divide the Image in 4 Equal Parts
-            imgheight = image.shape[0]
-            imgwidth = image.shape[1]
-
-            y1 = 0
-            M = imgheight // 2
-            N = imgwidth // 2
-
-            for y in range(0, imgheight, M):
-                for x in range(0, imgwidth, N):
-                    y1 = y + M
-                    x1 = x + N
-                    tiles = image[y:y + M, x:x + N]
-
-                    cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
-                    cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", tiles)
-
-                    testImg = cv.imread("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", 0);
-                    radon_transform(testImg)
-
-            cv.imwrite("asas.png", image)
-
-
-
-            # ret, image = cv.threshold(image, 75, 255, cv.THRESH_BINARY)
-            if len(image.shape) == 3 and image.shape[2] == 3:
-                print('Processing %s ...' % basename)
-            else:
-                sys.stderr.write('Skipping %s, not RGB' % basename)
-                continue
-            # dehazed = get_scene_radiance(image)
-            # side_by_side = np.concatenate((image1, dehazed), axis=1)
-            # cv.imwrite(os.path.join(resultdir, basename), image)
-    # generate_video(resultdir)
+    # for fullname in range(0, len(directory)):
+    #     fullname1 = str(fullname) + '.jpg'
+    #     print(fullname1)
+    #     # fullname2 = str(fullname + 20) + '.jpg'
+    #     filepath1 = os.path.join(inputdir, fullname1)
+    #     # filepath2 = os.path.join(inputdir, fullname2)
+    #     if os.path.isfile(filepath1):
+    #         basename = os.path.basename(filepath1)
+    #         image1 = cv.imread(filepath1, cv.IMREAD_COLOR)
+    #         # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
+    #         # image = cv.subtract(image2, image1)
+    #         image = image1
+    #
+    #         # To Divide the Image in 4 Equal Parts
+    #         # imgheight = image.shape[0]
+    #         # imgwidth = image.shape[1]
+    #         #
+    #         # y1 = 0
+    #         # M = imgheight // 2
+    #         # N = imgwidth // 2
+    #         #
+    #         # for y in range(0, imgheight, M):
+    #         #     for x in range(0, imgwidth, N):
+    #         #         y1 = y + M
+    #         #         x1 = x + N
+    #         #         tiles = image[y:y + M, x:x + N]
+    #         #
+    #         #         cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
+    #         #         cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", tiles)
+    #         #
+    #         #         testImg = cv.imread("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", 0);
+    #         #         radon_transform(testImg, fullname, x, y)
+    #         #
+    #         # cv.imwrite("asas.png", image)
+    #
+    #
+    #
+    #         # ret, image = cv.threshold(image, 75, 255, cv.THRESH_BINARY)
+    #         if len(image.shape) == 3 and image.shape[2] == 3:
+    #             print('Processing %s ...' % basename)
+    #         else:
+    #             sys.stderr.write('Skipping %s, not RGB' % basename)
+    #             continue
+    #         # dehazed = get_scene_radiance(image)
+    #         # side_by_side = np.concatenate((image1, dehazed), axis=1)
+    #         # cv.imwrite(os.path.join(resultdir, basename), image)
+    generate_video(radonResult)
 
 
 def main():
