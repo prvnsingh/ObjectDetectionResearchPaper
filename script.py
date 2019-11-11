@@ -49,6 +49,7 @@ from matplotlib.pyplot import imread
 from skimage.io import imread
 from skimage.data import shepp_logan_phantom
 from skimage.transform import radon, rescale
+import glob2
 
 L = 256
 
@@ -128,26 +129,26 @@ def generate_video(imgdir):
     video_name = 'Radon1.avi'
     # os.chdir("C:\\Users\\prvns\\Downloads\\research paper\\video\\")
 
-    directory = list(os.listdir(image_folder))
     images = [img for img in os.listdir(image_folder)
               if img.endswith(".jpg") or
               img.endswith(".jpeg") or
               img.endswith("png")]
+
     frame = cv.imread(os.path.join(image_folder, images[0]))
     height, width, layers = frame.shape
-    video = cv.VideoWriter(video_name, 0, 1, (width, height))
+    video = cv.VideoWriter(video_name, 0, 30, (width, height))
 
     # Appending the images to the video one by one
-    for image in range(0, len(directory), 4):
+    for image in images:
         print (image)
-        imageName = str(image) + '.jpg'
-        print(imageName)
-        video.write(cv.imread(os.path.join(image_folder, imageName)))
+        print(os.path.join(image_folder, image))
+        video.write(cv.imread(os.path.join(image_folder, image)))
 
     # Deallocating memories taken for window creation
     cv.destroyAllWindows()
     video.release()
-    print("done scene")
+    print("Video Generated!")
+
 
 def radon_transform(image, fullname, x, y):
     fig, (ax2) = plt.subplots(1, 1, figsize=(8, 4.5))
@@ -166,7 +167,7 @@ def radon_transform(image, fullname, x, y):
     plt.yticks([])
     # fig.tight_layout()
     # plt.show()
-    plt.savefig("radon_transform_video/" + str(fullname) + '-' + str(x) + '_' + str(y) + "RD.png")
+    plt.savefig("radon_transform_video/" + "RD" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg")
     plt.close(fig)
 
 def process_imgdir(imgdir):
@@ -179,40 +180,48 @@ def process_imgdir(imgdir):
     os.mkdir(resultdir)
     directory = list(os.listdir(inputdir))
 
-    # for fullname in range(0, len(directory)):
-    #     fullname1 = str(fullname) + '.jpg'
-    #     print(fullname1)
-    #     # fullname2 = str(fullname + 20) + '.jpg'
-    #     filepath1 = os.path.join(inputdir, fullname1)
-    #     # filepath2 = os.path.join(inputdir, fullname2)
-    #     if os.path.isfile(filepath1):
-    #         basename = os.path.basename(filepath1)
-    #         image1 = cv.imread(filepath1, cv.IMREAD_COLOR)
-    #         # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
-    #         # image = cv.subtract(image2, image1)
-    #         image = image1
-    #
-    #         # To Divide the Image in 4 Equal Parts
-    #         # imgheight = image.shape[0]
-    #         # imgwidth = image.shape[1]
-    #         #
-    #         # y1 = 0
-    #         # M = imgheight // 2
-    #         # N = imgwidth // 2
-    #         #
-    #         # for y in range(0, imgheight, M):
-    #         #     for x in range(0, imgwidth, N):
-    #         #         y1 = y + M
-    #         #         x1 = x + N
-    #         #         tiles = image[y:y + M, x:x + N]
-    #         #
-    #         #         cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
-    #         #         cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", tiles)
-    #         #
-    #         #         testImg = cv.imread("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".png", 0);
-    #         #         radon_transform(testImg, fullname, x, y)
-    #         #
-    #         # cv.imwrite("asas.png", image)
+    # video_name = 'ForthQuadrant.avi'
+    # video = cv.VideoWriter(video_name, 0, 60, (160, 124))
+
+    for fullname in range(0, len(directory)):
+        fullname1 = str(fullname) + '.jpg'
+        print(fullname1)
+        # fullname2 = str(fullname + 20) + '.jpg'
+        filepath1 = os.path.join(inputdir, fullname1)
+        # filepath2 = os.path.join(inputdir, fullname2)
+        if os.path.isfile(filepath1):
+            basename = os.path.basename(filepath1)
+            image1 = cv.imread(filepath1, cv.IMREAD_COLOR)
+            # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
+            # image = cv.subtract(image2, image1)
+            image = image1
+
+            # To Divide the Image in 4 Equal Parts
+            imgheight = image.shape[0]
+            # imgwidth = image.shape[1]
+            #
+            # y1 = 0
+            # M = imgheight // 2
+            # N = imgwidth // 2
+            #
+            # for y in range(0, imgheight, M):
+            #     for x in range(0, imgwidth, N):
+            #         y1 = y + M
+            #         x1 = x + N
+            #         tiles = image[y:y + M, x:x + N]
+            #
+            #         cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
+            #         if (x == 80) and (y == 64):
+            #             cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg", tiles)
+            #             # testImg = cv.imread("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg", 0)
+            #             # radon_transform(testImg, fullname, x, y)
+            #             # print("Added" + "radon_transform_video/" + "RD" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg - To video")
+            #             # video.write(cv.imread("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg"))
+            #
+            # cv.imwrite("asas.png", image)
+    # cv.destroyAllWindows()
+    # video.release()
+    # print("Video Generated!")
     #
     #
     #
@@ -225,7 +234,7 @@ def process_imgdir(imgdir):
     #         # dehazed = get_scene_radiance(image)
     #         # side_by_side = np.concatenate((image1, dehazed), axis=1)
     #         # cv.imwrite(os.path.join(resultdir, basename), image)
-    generate_video(radonResult)
+    # generate_video(radonResult)
 
 
 def main():
