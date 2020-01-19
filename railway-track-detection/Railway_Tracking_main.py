@@ -195,11 +195,11 @@ def main():
             # expt_startLeft is the expected position of the lower edge of the line segment fitting the rail
             # expressed in full image coordinates
             eval_frameL, start_colL, end_colL, expt_startLeft = railL.extract_rail_line(frame,
-                                                                                        start_rows=300,
+                                                                                        start_rows=310,
                                                                                         end_rows=np.size(
                                                                                             frame, 0),
-                                                                                        start_cols=140,
-                                                                                        end_cols=250,
+                                                                                        start_cols=175,
+                                                                                        end_cols=315,
                                                                                         canny_min=20,
                                                                                         canny_max=100,
                                                                                         hough_I=45,
@@ -211,10 +211,10 @@ def main():
                                                                                         )
 
             eval_frameR, start_colR, end_colR, expt_startRight = railR.extract_rail_line(frame,
-                                                                                         start_rows=300,
+                                                                                         start_rows=310,
                                                                                          end_rows=450,
-                                                                                         start_cols=130,
-                                                                                         end_cols=235,
+                                                                                         start_cols=170,
+                                                                                         end_cols=300,
                                                                                          canny_min=40,
                                                                                          canny_max=200,
                                                                                          hough_I=40,
