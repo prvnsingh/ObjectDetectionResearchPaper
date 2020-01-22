@@ -8,7 +8,7 @@ def do_canny(frame):
     # Applies a 5x5 gaussian blur with deviation of 0 to frame - not mandatory since Canny will do this for us
     blur = cv.GaussianBlur(frame, (5, 5), 0)
     # Applies Canny edge detector with minVal of 50 and maxVal of 150
-    canny = cv.Canny(blur, 50, 150)
+    canny = cv.Canny(blur, 150, 200)
     return canny
 
 def do_segment(frame):
