@@ -17,12 +17,12 @@ def do_segment(frame):
     height = frame.shape[0]
     # Creates a triangular polygon for the mask defined by three (x, y) coordinates
     polygons = np.array([
-                            [(0, height), (400, height), (230, 150)]
+                            [(115, height), (355, height), (227, 145)]
                         ])
     # Creates an image filled with zero intensities with the same dimensions as the frame
     mask = np.zeros_like(frame)
     # Allows the mask to be filled with values of 1 and the other areas to be filled with values of 0
-    cv.fillPoly(mask, polygons, 255)
+    masked = cv.fillPoly(mask, polygons, 255)
     # A bitwise and operation between the mask and frame keeps only the triangular area of the frame
     segment = cv.bitwise_and(frame, mask)
     return segment
@@ -70,8 +70,8 @@ def visualize_lines(frame, lines):
     # Checks if any lines are detected
     if lines is not None:
         for x1, y1, x2, y2 in lines:
-            # Draws lines between two coordinates with green color and 5 thickness
-            cv.line(lines_visualize, (x1, y1), (x2, y2), (0, 255, 0), 5)
+            # Draws lines between two coordinates with green color and 4 thickness
+            cv.line(lines_visualize, (x1, y1), (x2, y2), (0, 255, 0), 4)
     return lines_visualize
 
 # The video feed is read in as a VideoCapture object
@@ -87,8 +87,9 @@ while (cap.isOpened()):
     # plt.imshow(frame)
     # plt.show()
     segment = do_segment(canny)
-    # hough = cv.HoughLinesP(segment, 2, np.pi / 180, 100, np.array([]), minLineLength = 100, maxLineGap = 50)
-    hough = cv.HoughLinesP(segment, 2, np.pi / 180, 100, np.array([]))
+    # cv.HoughLinesP(frame, distance resolution of accumulator in pixels (larger = less precision), angle resolution of accumulator in radians (larger = less precision), threshold of minimum number of intersections, empty placeholder array, minimum length of line in pixels, maximum distance in pixels between disconnected lines)
+    hough = cv.HoughLinesP(segment, 1.5, np.pi / 180, 100, np.array([]), minLineLength = 160, maxLineGap = 150)
+    # hough = cv.HoughLinesP(segment, 2, np.pi / 180, 100, np.array([]))
     # Averages multiple detected lines from hough into one line for left border of lane and one line for right border of lane
     lines = calculate_lines(frame, hough)
     # Visualizes the lines
