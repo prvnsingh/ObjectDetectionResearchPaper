@@ -1,42 +1,3 @@
-# import os
-# import cv2
-# cam = cv2.VideoCapture("C:\\Users\\prvns\\Downloads\\research paper\\vid.mp4")
-# try:
-
-#     # creating a folder named data
-#     if not os.path.exists('data'):
-#         os.makedirs('data')
-
-# # if not created then raise error
-# except OSError:
-#     print('Error: Creating directory of data')
-
-# # frame
-# currentframe = 0
-
-# while(True):
-
-#     # reading from frame
-#     ret, frame = cam.read()
-
-#     if ret:
-#         # if video is still left continue creating images
-#         name = str(currentframe) + '.jpg'
-#         print('Creating...' + name)
-
-#         # writing the extracted images
-#         cv2.imwrite(name, frame)
-
-#         # increasing counter so that it will
-#         # show how many frames are created
-#         currentframe += 1
-#     else:
-#         break
-
-# # Release all space and windows once done
-# cam.release()
-# cv2.destroyAllWindows()
-
 import math
 import numpy as np
 import cv2 as cv
@@ -47,12 +8,53 @@ from scipy import misc
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imread
 from skimage.io import imread
-from skimage.data import shepp_logan_phantom
 from skimage.transform import radon, rescale
 import glob2
 
+
+
 L = 256
 
+
+def generate_image_frames(scriptdir):
+    video_name = 'new vid.mp4'
+    video_path=os.path.join(scriptdir,video_name)
+    cam = cv.VideoCapture(video_path)
+    try:
+
+        # creating a folder named data
+        if not os.path.exists(os.path.join(scriptdir,'data','input')):
+            os.makedirs(os.path.join(scriptdir,'data','input'))
+
+    # if not created then raise error
+    except OSError:
+        print('Error: Creating directory of data')
+    os.chdir(os.path.join(scriptdir,'data','input'))
+    # frame
+    currentframe = 0
+
+    while (True):
+
+        # reading from frame
+        ret, frame = cam.read()
+
+        if ret:
+            # if video is still left continue creating images
+            name = str(currentframe) + '.jpg'
+            print('Creating...' + name)
+
+            # writing the extracted images
+            cv.imwrite(name, frame)
+
+            # increasing counter so that it will
+            # show how many frames are created
+            currentframe += 1
+        else:
+            break
+
+    # Release all space and windows once done
+    cam.release()
+    cv.destroyAllWindows()
 
 def get_dark_channel(img, *, size):
     """Get dark channel for an image.
@@ -156,27 +158,35 @@ def radon_transform(image, fullname, x, y):
     # ax1.set_title("Original")
 
     theta = np.linspace(0., 180., max(image.shape), endpoint=False)
-    sinogram = radon(image, theta=theta, circle=True)
-    # ax2.set_title("Radon transform\n(Sinogram)")
-    # ax2.set_xlabel("Projection angle (deg)")
-    # ax2.set_ylabel("Projection position (pixels)")
+    sinogram = radon(image[:,:,0], theta=theta, circle=True)
+    ax2.set_title("Radon transform\n(Sinogram)")
+    ax2.set_xlabel("Projection angle (deg)")
+    ax2.set_ylabel("Projection position (pixels)")
     ax2.imshow(sinogram, cmap=plt.cm.Greys_r,
-            extent=(0, 180, 0, sinogram.shape[0]), aspect='auto')
-
-    plt.xticks([])
-    plt.yticks([])
+               extent=(0, 180, 0, sinogram.shape[0]), aspect='auto')
+    return image, sinogram, theta
     # fig.tight_layout()
     # plt.show()
-    plt.savefig("radon_transform_video/" + "RD" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg")
-    plt.close(fig)
+
+def  inverse_radon_transfrom(image,sinogram,theta):
+    reconstruction_fbp = iradon(sinogram, theta=theta )
+    # error = reconstruction_fbp - image
+    # print(f"FBP rms reconstruction error: {np.sqrt(np.mean(error ** 2)):.3g}")
+
+    # imkwargs = dict(vmin=-0.2, vmax=0.2)
+    # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4.5),sharex=True, sharey=True)
+    # ax1.set_title("Reconstruction\nFiltered back projection")
+    # ax1.imshow(reconstruction_fbp, cmap=plt.cm.Greys_r)
+    # ax2.set_title("Reconstruction error\nFiltered back projection")
+    # ax2.imshow(reconstruction_fbp - image, cmap=plt.cm.Greys_r, **imkwargs)
+    return reconstruction_fbp
+    # plt.show()
 
 def process_imgdir(imgdir):
-    resultdir = os.path.join(imgdir, 'results')
-    inputdir = os.path.join(imgdir, 'inputs')
-    goBackOneDir = os.path.abspath(os.path.join(__file__ ,".."))
-    radonResult = os.path.join(goBackOneDir, 'radon_transform_video')
-    print(radonResult)
-    shutil.rmtree(resultdir)
+    resultdir = os.path.join(imgdir, 'result')
+    inputdir = os.path.join(imgdir, 'input')
+    if os.path.exists(resultdir):
+        shutil.rmtree(resultdir)
     os.mkdir(resultdir)
     directory = list(os.listdir(inputdir))
 
@@ -191,13 +201,14 @@ def process_imgdir(imgdir):
         # filepath2 = os.path.join(inputdir, fullname2)
         if os.path.isfile(filepath1):
             basename = os.path.basename(filepath1)
-            image1 = cv.imread(filepath1, cv.IMREAD_COLOR)
+            image1 = cv.imread(filepath1)
             # image2 = cv.imread(filepath2, cv.IMREAD_COLOR)
             # image = cv.subtract(image2, image1)
             image = image1
 
-            # To Divide the Image in 4 Equal Parts
+            # To Divide the Image into 3 vertical Equal Parts and processing the middle track
             imgheight = image.shape[0]
+
             # imgwidth = image.shape[1]
             #
             # y1 = 0
@@ -235,10 +246,38 @@ def process_imgdir(imgdir):
     #         # side_by_side = np.concatenate((image1, dehazed), axis=1)
     #         # cv.imwrite(os.path.join(resultdir, basename), image)
     # generate_video(radonResult)
+            imgwidth = image.shape[1]
 
+            y1 = 0
+            M = imgheight
+            N = imgwidth // 3
+            y=0
+            x = N
+            y1 = M
+            x1 = x + N
+            tiles = image[y:M, x:x + N]
+            cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
+            os.chdir(resultdir)
+            cv.imwrite(basename, tiles)
+            testImg = cv.imread(basename)
+            image,sinogram, theta = radon_transform(testImg)
+            ret, image = cv.threshold(image, 75, 255, cv.THRESH_BINARY)
+            reconstructed_image = inverse_radon_transfrom(image,sinogram,theta)
+            cv.imwrite(basename,reconstructed_image)
+
+            if len(image.shape) == 3 and image.shape[2] == 3:
+                print('Processing %s ...' % basename)
+            else:
+                sys.stderr.write('Skipping %s, not RGB' % basename)
+                continue
+            # dehazed = get_scene_radiance(image)
+            # side_by_side = np.concatenate((image1, dehazed), axis=1)
+            # cv.imwrite(os.path.join(resultdir, basename), image)
+    generate_video(resultdir)
 
 def main():
     scriptdir = os.path.dirname(os.path.realpath(__file__))
+    # generate_image_frames(scriptdir)
     imgdir = os.path.join(scriptdir, 'data')
     process_imgdir(imgdir)
 
