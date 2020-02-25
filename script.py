@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import imread
 from skimage.io import imread
 from skimage.transform import radon, rescale
-from skimage.transform import iradon
+import glob2
+
 
 
 L = 256
@@ -127,30 +128,34 @@ def get_scene_radiance(img,
 
 def generate_video(imgdir):
     image_folder = imgdir
-    video_name = '20frameswiththreshold.avi'
-    os.chdir("C:\\Users\\prvns\\Downloads\\research paper\\video\\")
+    video_name = 'Radon1.avi'
+    # os.chdir("C:\\Users\\prvns\\Downloads\\research paper\\video\\")
 
     images = [img for img in os.listdir(image_folder)
               if img.endswith(".jpg") or
               img.endswith(".jpeg") or
               img.endswith("png")]
+
     frame = cv.imread(os.path.join(image_folder, images[0]))
     height, width, layers = frame.shape
-    video = cv.VideoWriter(video_name, 0, 1, (width, height))
+    video = cv.VideoWriter(video_name, 0, 30, (width, height))
 
     # Appending the images to the video one by one
     for image in images:
+        print (image)
+        print(os.path.join(image_folder, image))
         video.write(cv.imread(os.path.join(image_folder, image)))
 
     # Deallocating memories taken for window creation
     cv.destroyAllWindows()
     video.release()
-    print("done scene")
+    print("Video Generated!")
 
-def radon_transform(image):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4.5))
-    ax1.imshow(image, cmap=plt.cm.Greys_r)
-    ax1.set_title("Original")
+
+def radon_transform(image, fullname, x, y):
+    fig, (ax2) = plt.subplots(1, 1, figsize=(8, 4.5))
+    # ax1.imshow(image, cmap=plt.cm.Greys_r)
+    # ax1.set_title("Original")
 
     theta = np.linspace(0., 180., max(image.shape), endpoint=False)
     sinogram = radon(image[:,:,0], theta=theta, circle=True)
@@ -185,6 +190,9 @@ def process_imgdir(imgdir):
     os.mkdir(resultdir)
     directory = list(os.listdir(inputdir))
 
+    # video_name = 'ForthQuadrant.avi'
+    # video = cv.VideoWriter(video_name, 0, 60, (160, 124))
+
     for fullname in range(0, len(directory)):
         fullname1 = str(fullname) + '.jpg'
         print(fullname1)
@@ -200,6 +208,44 @@ def process_imgdir(imgdir):
 
             # To Divide the Image into 3 vertical Equal Parts and processing the middle track
             imgheight = image.shape[0]
+
+            # imgwidth = image.shape[1]
+            #
+            # y1 = 0
+            # M = imgheight // 2
+            # N = imgwidth // 2
+            #
+            # for y in range(0, imgheight, M):
+            #     for x in range(0, imgwidth, N):
+            #         y1 = y + M
+            #         x1 = x + N
+            #         tiles = image[y:y + M, x:x + N]
+            #
+            #         cv.rectangle(image, (x, y), (x1, y1), (0, 255, 0))
+            #         if (x == 80) and (y == 64):
+            #             cv.imwrite("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg", tiles)
+            #             # testImg = cv.imread("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg", 0)
+            #             # radon_transform(testImg, fullname, x, y)
+            #             # print("Added" + "radon_transform_video/" + "RD" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg - To video")
+            #             # video.write(cv.imread("results/" + str(fullname) + '-' + str(x) + '_' + str(y) + ".jpg"))
+            #
+            # cv.imwrite("asas.png", image)
+    # cv.destroyAllWindows()
+    # video.release()
+    # print("Video Generated!")
+    #
+    #
+    #
+    #         # ret, image = cv.threshold(image, 75, 255, cv.THRESH_BINARY)
+    #         if len(image.shape) == 3 and image.shape[2] == 3:
+    #             print('Processing %s ...' % basename)
+    #         else:
+    #             sys.stderr.write('Skipping %s, not RGB' % basename)
+    #             continue
+    #         # dehazed = get_scene_radiance(image)
+    #         # side_by_side = np.concatenate((image1, dehazed), axis=1)
+    #         # cv.imwrite(os.path.join(resultdir, basename), image)
+    # generate_video(radonResult)
             imgwidth = image.shape[1]
 
             y1 = 0
@@ -228,7 +274,6 @@ def process_imgdir(imgdir):
             # side_by_side = np.concatenate((image1, dehazed), axis=1)
             # cv.imwrite(os.path.join(resultdir, basename), image)
     generate_video(resultdir)
-
 
 def main():
     scriptdir = os.path.dirname(os.path.realpath(__file__))
