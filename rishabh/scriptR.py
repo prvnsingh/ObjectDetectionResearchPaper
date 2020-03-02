@@ -1,12 +1,13 @@
 import cv2
 import sys
 import numpy as np
+import os
 
 def nothing(x):
     pass
 
 # Load in image
-image = cv2.imread('1.jpg')
+image = cv2.imread('196.jpg')
 
 # Create a window
 cv2.namedWindow('image')
@@ -24,12 +25,18 @@ cv2.setTrackbarPos('HMax', 'image', 179)
 cv2.setTrackbarPos('SMax', 'image', 255)
 cv2.setTrackbarPos('VMax', 'image', 255)
 
+cv2.setTrackbarPos('VMin', 'image', 216)
+
 # Initialize to check if HSV min/max value changes
 hMin = sMin = vMin = hMax = sMax = vMax = 0
 phMin = psMin = pvMin = phMax = psMax = pvMax = 0
 
 output = image
 wait_time = 33
+
+print("the code is", os.path.abspath(os.getcwd()))
+
+print("hello")
 
 while(1):
 
@@ -50,6 +57,11 @@ while(1):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower, upper)
     output = cv2.bitwise_and(image,image, mask= mask)
+
+    # cv2.imwrite(os.path.abspath(os.getcwd())+'result', output)
+  
+    cv2.imwrite("result.jpg", output)
+      
 
     # Print if there is a change in HSV value
     if( (phMin != hMin) | (psMin != sMin) | (pvMin != vMin) | (phMax != hMax) | (psMax != sMax) | (pvMax != vMax) ):
