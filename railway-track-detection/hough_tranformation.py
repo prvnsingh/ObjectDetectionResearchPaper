@@ -28,7 +28,7 @@ def do_segment(frame):
     # Allows the mask to be filled with values of 1 and the other areas to be filled with values of 0
     masked = cv.fillPoly(mask, polygons, 255)
     # A bitwise and operation between the mask and frame keeps only the triangular area of the frame
-    segment = cv.bitwise_and(frame, mask)
+    segment = cv.bitwise_and(frame, masked)
     return segment
 
 def calculate_lines(frame, lines):
@@ -115,10 +115,21 @@ while (cap.isOpened()):
 
     # apply hsv
     hsv_output = hsv(frame)
-
+    height = frame.shape[0]
+    # Creates a triangular polygon for the mask defined by three (x, y) coordinates
+    polygons = np.array([
+                            [(115, height), (355, height), (227, 145)]
+                        ])
+    # Creates an image filled with zero intensities with the same dimensions as the frame
+    mask = np.zeros_like(frame)
+    # Allows the mask to be filled with values of 1 and the other areas to be filled with values of 0
+    masked = cv.fillPoly(mask, polygons, (255,255,255))
+    # A bitwise and operation between the mask and frame keeps only the triangular area of the frame
+    img = cv.bitwise_and(hsv_output, masked)
     # Overlays lines on frame by taking their weighted sums and adding an arbitrary scalar value of 1 as the gamma argument
-    final = cv.addWeighted(hsv_output, 0.9, lines_visualize, 1, 1)
+    final = cv.addWeighted(img, 0.9, lines_visualize, 1, 1)
     # Opens a new window and displays the output frame
+
     cv.imshow("final", final)
     # Frames are read by intervals of 10 milliseconds. The programs breaks out of the while loop when the user presses the 'q' key
     if cv.waitKey(10) & 0xFF == ord('q'):
