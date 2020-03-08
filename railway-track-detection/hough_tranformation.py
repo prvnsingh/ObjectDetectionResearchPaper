@@ -2,6 +2,10 @@ import cv2 as cv
 import numpy as np
 # import matplotlib.pyplot as plt
 
+def nothing(x):
+    pass
+
+
 def do_canny(frame):
     # Converts frame to grayscale because we only need the luminance channel for detecting edges - less computationally expensive
     # gray = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
@@ -74,6 +78,19 @@ def visualize_lines(frame, lines):
             cv.line(lines_visualize, (x1, y1), (x2, y2), (0, 255, 0), 4)
     return lines_visualize
 
+def hsv(frame):
+    # Initialize to check if HSV min/max value changes
+    hMin = sMin = vMin = hMax = sMax = vMax = 0
+    phMin = psMin = pvMin = phMax = psMax = pvMax = 0
+    # Set minimum and max HSV values to display
+    # precalculated
+    lower = np.array([0, 0, 216])
+    upper = np.array([179, 255, 255])
+    hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+    mask = cv.inRange(hsv, lower, upper)
+    output = cv.bitwise_and(frame, frame, mask=mask)
+    return output
+
 # The video feed is read in as a VideoCapture object
 cap = cv.VideoCapture("new vid.mp4")
 # C:\Users\prvns\Downloads\Video
@@ -81,9 +98,10 @@ cap = cv.VideoCapture("new vid.mp4")
 while (cap.isOpened()):
     # ret = a boolean return value from getting the frame, frame = the current frame being projected in the video
     ret, frame = cap.read()
-    print(frame.shape)
+    # output = frame
+    # print(frame.shape)
     canny = do_canny(frame)
-    cv.imshow("canny", canny)
+    # cv.imshow("canny", canny)
     # plt.imshow(frame)
     # plt.show()
     segment = do_segment(canny)
@@ -94,33 +112,17 @@ while (cap.isOpened()):
     lines = calculate_lines(frame, hough)
     # Visualizes the lines
     lines_visualize = visualize_lines(frame, lines)
-    cv.imshow("hough", lines_visualize)
+
+    # apply hsv
+    hsv_output = hsv(frame)
+
     # Overlays lines on frame by taking their weighted sums and adding an arbitrary scalar value of 1 as the gamma argument
-    output = cv.addWeighted(frame, 0.9, lines_visualize, 1, 1)
+    final = cv.addWeighted(hsv_output, 0.9, lines_visualize, 1, 1)
     # Opens a new window and displays the output frame
-    cv.imshow("output", output)
+    cv.imshow("final", final)
     # Frames are read by intervals of 10 milliseconds. The programs breaks out of the while loop when the user presses the 'q' key
     if cv.waitKey(10) & 0xFF == ord('q'):
         break
 # The following frees up resources and closes all windows
 cap.release()
 cv.destroyAllWindows()
-
-
-# frame = cv.imread('1.jpg', 0)
-# canny = do_canny(frame)
-# cv.imshow("canny", canny)
-# # plt.imshow(frame)
-# # plt.show()
-# segment = do_segment(canny)
-# print(segment.shape)
-# hough = cv.HoughLinesP(segment, 2, np.pi / 180, 100, np.array([]), minLineLength = 100, maxLineGap = 50)
-# # Averages multiple detected lines from hough into one line for left border of lane and one line for right border of lane
-# lines = calculate_lines(frame, hough)
-# # Visualizes the lines
-# lines_visualize = visualize_lines(frame, lines)
-# cv.imshow("hough", lines_visualize)
-# # Overlays lines on frame by taking their weighted sums and adding an arbitrary scalar value of 1 as the gamma argument
-# output = cv.addWeighted(frame, 0.9, lines_visualize, 1, 1)
-# # Opens a new window and displays the output frame
-# cv.imshow("output", output)
